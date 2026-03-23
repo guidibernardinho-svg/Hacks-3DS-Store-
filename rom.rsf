@@ -1,0 +1,11 @@
+BasicInfo:
+  Title: Hack Builder
+  ProductCode: CTR-H-HACK
+  ContentType: Application
+
+TitleInfo:
+  Category: Application
+  UniqueId: 0x12345
+
+SystemControlInfo:
+  SaveDataSize: 0

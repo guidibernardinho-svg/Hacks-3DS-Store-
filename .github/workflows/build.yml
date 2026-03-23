@@ -1,42 +1,41 @@
-name: Build CIA
+name: Build 3DS CIA
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install devkitPro
+      - name: Setup devkitPro
         run: |
           sudo apt update
-          sudo apt install -y wget git
-          wget https://apt.devkitpro.org/install-devkitpro-pacman
-          chmod +x install-devkitpro-pacman
-          sudo ./install-devkitpro-pacman
+          sudo apt install -y curl git
+
+          curl -L https://apt.devkitpro.org/install-devkitpro-pacman | sudo bash
 
           sudo dkp-pacman -Syu --noconfirm
           sudo dkp-pacman -S --noconfirm devkitARM libctru 3ds-dev
 
-      - name: Set environment
+      - name: Set environment variables
         run: |
           echo "DEVKITPRO=/opt/devkitpro" >> $GITHUB_ENV
           echo "DEVKITARM=/opt/devkitpro/devkitARM" >> $GITHUB_ENV
+          echo "/opt/devkitpro/tools/bin" >> $GITHUB_PATH
 
-      - name: Build ELF
-        run: make
-
-      - name: Build CIA
+      - name: Build project
         run: |
-          mkdir output
-          /opt/devkitpro/tools/bin/makerom -f cia \
-            -o output/hackbuilder.cia \
+          make
+
+      - name: Create CIA
+        run: |
+          mkdir -p output
+          makerom -f cia \
+            -o output/app.cia \
             -rsf rom.rsf \
             -target t \
             -exefslogo \
@@ -45,5 +44,5 @@ jobs:
       - name: Upload CIA
         uses: actions/upload-artifact@v4
         with:
-          name: HackBuilderCIA
-          path: output/hackbuilder.cia
+          name: CIA
+          path: output/app.cia

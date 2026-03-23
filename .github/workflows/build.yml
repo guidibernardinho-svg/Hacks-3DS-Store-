@@ -8,28 +8,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup devkitPro
+      - name: Install devkitPro (manual FIX)
         run: |
           sudo apt update
-          sudo apt install -y curl git
+          sudo apt install -y wget make gcc g++
 
-          curl -L https://apt.devkitpro.org/install-devkitpro-pacman | sudo bash
+          # Baixa devkitPro direto (sem apt)
+          wget https://github.com/devkitPro/installer/releases/latest/download/devkitpro-pacman.deb
+          sudo dpkg -i devkitpro-pacman.deb
 
           sudo dkp-pacman -Syu --noconfirm
           sudo dkp-pacman -S --noconfirm devkitARM libctru 3ds-dev
 
-      - name: Set environment variables
+      - name: Set ENV
         run: |
           echo "DEVKITPRO=/opt/devkitpro" >> $GITHUB_ENV
           echo "DEVKITARM=/opt/devkitpro/devkitARM" >> $GITHUB_ENV
           echo "/opt/devkitpro/tools/bin" >> $GITHUB_PATH
 
-      - name: Build project
-        run: |
-          make
+      - name: Build
+        run: make
 
       - name: Create CIA
         run: |
@@ -41,7 +42,7 @@ jobs:
             -exefslogo \
             -elf hackbuilder.elf
 
-      - name: Upload CIA
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: CIA

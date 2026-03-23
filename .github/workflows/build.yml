@@ -1,0 +1,49 @@
+name: Build CIA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install devkitPro
+        run: |
+          sudo apt update
+          sudo apt install -y wget git
+          wget https://apt.devkitpro.org/install-devkitpro-pacman
+          chmod +x install-devkitpro-pacman
+          sudo ./install-devkitpro-pacman
+
+          sudo dkp-pacman -Syu --noconfirm
+          sudo dkp-pacman -S --noconfirm devkitARM libctru 3ds-dev
+
+      - name: Set environment
+        run: |
+          echo "DEVKITPRO=/opt/devkitpro" >> $GITHUB_ENV
+          echo "DEVKITARM=/opt/devkitpro/devkitARM" >> $GITHUB_ENV
+
+      - name: Build ELF
+        run: make
+
+      - name: Build CIA
+        run: |
+          mkdir output
+          /opt/devkitpro/tools/bin/makerom -f cia \
+            -o output/hackbuilder.cia \
+            -rsf rom.rsf \
+            -target t \
+            -exefslogo \
+            -elf hackbuilder.elf
+
+      - name: Upload CIA
+        uses: actions/upload-artifact@v4
+        with:
+          name: HackBuilderCIA
+          path: output/hackbuilder.cia
